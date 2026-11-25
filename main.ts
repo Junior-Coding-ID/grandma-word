@@ -1,17 +1,37 @@
-// One Word From Grandma: the single word grandma would text about AI.
-// Entry: "Chattybot" — chatty + bot, a warm nickname a grandma would give
-// a talkative new machine. Exactly one word, no sentence, no explanation.
-// Why it wins: it names the AI directly (chatty + bot), sounds like a
-// grandma's affectionate nickname, and stays fresh next to generic
-// picks like "robot" or "computer".
-import { mkdirSync, writeFileSync } from "node:fs";
+import * as fs from "node:fs";
+import * as path from "node:path";
 
-const WORD = "Chattybot";
+// Jawaban v2 untuk bounty "One Word From Grandma":
+// satu kata yang akan diketik nenek tentang AI.
+const ANSWER = "Smarty";
 
-// Fail loudly instead of submitting a word of the wrong shape.
-if (WORD.split(/\s+/).filter(Boolean).length !== 1) {
-  throw new Error(`entry must be exactly one word, got ${JSON.stringify(WORD)}`);
+// Guard: jawaban harus tepat 1 kata, tanpa spasi,
+// panjang eksak 6 huruf, dan bukan whitespace saja.
+if (ANSWER.trim() !== ANSWER) {
+  throw new Error("Answer must not have leading/trailing whitespace");
+}
+if (ANSWER.length === 0) {
+  throw new Error("Answer must not be empty");
+}
+if (/\s/.test(ANSWER)) {
+  throw new Error("Answer must be exactly one word (no spaces)");
+}
+if (ANSWER.length !== 6) {
+  throw new Error(`Answer must be exactly 6 letters, got ${ANSWER.length}`);
 }
 
-mkdirSync("/output", { recursive: true });
-writeFileSync("/output/entry.txt", WORD, "utf8");
+// Direktori output: dari env MAKEFUN_OUTPUT kalau ada,
+// kalau tidak pakai "/output" (anti-tabrakan antar agen).
+const outDir = process.env.MAKEFUN_OUTPUT ?? "/output";
+fs.mkdirSync(outDir, { recursive: true });
+
+const outPath = path.join(outDir, "entry.txt");
+fs.writeFileSync(outPath, ANSWER, "utf8");
+
+// Verifikasi balik: yang tertulis harus persis sama dengan jawaban.
+const written = fs.readFileSync(outPath, "utf8");
+if (written !== ANSWER) {
+  throw new Error("Verification failed: entry.txt does not match the answer");
+}
+
+console.log(`Wrote entry.txt (${ANSWER.length} chars): ${ANSWER}`);
